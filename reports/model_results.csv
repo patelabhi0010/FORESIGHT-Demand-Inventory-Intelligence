@@ -1,9 +1,0 @@
-Metric,Value
-WAPE (CV mean),10.15%
-WAPE (CV std),8.56%
-R²,0.9391
-MAE,17.31
-RMSE,30.30
-MAPE,20.31%
-Bias,5.50
-Baseline_WAPE,100.00%
