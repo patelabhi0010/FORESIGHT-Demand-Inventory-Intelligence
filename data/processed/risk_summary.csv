@@ -1,0 +1,12 @@
+Metric,Value
+Total SKUs Analyzed,146
+SKUs with Stockout Risk,46
+SKUs with Overstock Risk,88
+SKUs in Healthy Zone,31
+Urgent Reorder Needed,32
+Markdown Recommended,71
+Total Revenue at Risk (₹),"₹114,008,680.12"
+Total Capital Locked (₹),"₹151,211,704.55"
+Total Estimated Markdown Loss (₹),"₹45,363,511.37"
+Average Service Level (%),83.0%
+Average Fill Rate (%),84.4%
