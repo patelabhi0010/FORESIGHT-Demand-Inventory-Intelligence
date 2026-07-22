@@ -73,7 +73,6 @@ FORESIGHT/
 │   ├── forecast.py
 │   ├── risk.py
 │
-├── dashboard.html
 ├── foresight dashboard.pbix
 ├── generate_data.py
 ├── requirements.txt
