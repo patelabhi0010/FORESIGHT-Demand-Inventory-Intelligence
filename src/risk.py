@@ -79,7 +79,7 @@ print("=" * 60)
 # 1. LOAD DATA - WITH ERROR HANDLING
 # ============================================
 
-print("\n📂 Loading data...")
+print("\n Loading data...")
 
 def load_data():
     """Load all required data with comprehensive error handling"""
@@ -90,10 +90,10 @@ def load_data():
     try:
         df = pd.read_csv(DATA_PROCESSED / 'final_dataset.csv')
         df['date'] = pd.to_datetime(df['date'])
-        print(f"   ✅ Loaded final_dataset.csv: {len(df):,} records")
+        print(f"    Loaded final_dataset.csv: {len(df):,} records")
         data['df'] = df
     except FileNotFoundError:
-        print("   ❌ final_dataset.csv not found! Run pipeline.py first.")
+        print("    final_dataset.csv not found! Run pipeline.py first.")
         raise
     
     # Load future predictions
@@ -110,12 +110,12 @@ def load_data():
         if date_col:
             future_predictions['date'] = pd.to_datetime(future_predictions[date_col])
         else:
-            print("   ⚠️ No date column found. Using first date in dataset.")
+            print("    No date column found. Using first date in dataset.")
             future_predictions['date'] = pd.to_datetime(df['date'].min()) + pd.Timedelta(days=1)
         
         # Handle SKU ID
         if 'sku_id' not in future_predictions.columns:
-            print("   ⚠️ No sku_id in future_predictions. Using SKUs from inventory.")
+            print("    No sku_id in future_predictions. Using SKUs from inventory.")
             sku_list = df['sku_id'].unique()
             future_predictions['sku_id'] = np.random.choice(sku_list, len(future_predictions))
         
@@ -128,14 +128,14 @@ def load_data():
             print(f"   Using prediction column: {pred_col}")
             future_predictions.rename(columns={pred_col: 'predicted_units_sold'}, inplace=True)
         else:
-            print("   ⚠️ No prediction column found. Creating sample predictions.")
+            print("    No prediction column found. Creating sample predictions.")
             future_predictions['predicted_units_sold'] = np.random.randint(5, 50, len(future_predictions))
         
         data['future_predictions'] = future_predictions
-        print(f"   ✅ Loaded future_predictions.csv: {len(future_predictions):,} records")
+        print(f"    Loaded future_predictions.csv: {len(future_predictions):,} records")
         
     except FileNotFoundError:
-        print("   ⚠️ future_predictions.csv not found. Creating sample data...")
+        print("    future_predictions.csv not found. Creating sample data...")
         # Create sample predictions
         sku_list = df['sku_id'].unique()[:50]
         dates = pd.date_range(start=datetime.now(), periods=28, freq='D')
@@ -149,7 +149,7 @@ def load_data():
                 })
         future_predictions = pd.DataFrame(sample_data)
         data['future_predictions'] = future_predictions
-        print(f"   ✅ Created sample data for {len(sku_list)} SKUs")
+        print(f"    Created sample data for {len(sku_list)} SKUs")
     
     # Load SKU master
     try:
@@ -158,9 +158,9 @@ def load_data():
         if 'sku_id' in sku_master.columns:
             sku_master['sku_id'] = sku_master['sku_id'].str.upper()
         data['sku_master'] = sku_master
-        print(f"   ✅ Loaded sku_master.csv: {len(sku_master):,} SKUs")
+        print(f"    Loaded sku_master.csv: {len(sku_master):,} SKUs")
     except FileNotFoundError:
-        print("   ⚠️ sku_master.csv not found. Using categories from inventory.")
+        print("    sku_master.csv not found. Using categories from inventory.")
         # Create from inventory
         sku_info = df[['sku_id']].drop_duplicates()
         sku_info['category'] = 'Unknown'
@@ -178,7 +178,7 @@ sku_master = data['sku_master']
 # 2. GET LATEST INVENTORY STATUS
 # ============================================
 
-print("\n📊 Getting latest inventory status...")
+print("\n Getting latest inventory status...")
 
 def get_latest_inventory(df):
     """Get latest inventory for each SKU"""
@@ -214,13 +214,13 @@ def get_latest_inventory(df):
     return latest_inventory
 
 latest_inventory = get_latest_inventory(df)
-print(f"   ✅ Latest inventory for {len(latest_inventory)} SKUs")
+print(f"    Latest inventory for {len(latest_inventory)} SKUs")
 
 # ============================================
 # 3. ADD CATEGORY INFORMATION
 # ============================================
 
-print("\n📂 Adding category information...")
+print("\n Adding category information...")
 
 def add_category_info(inventory_df, sku_master):
     """Add category and subcategory to inventory"""
@@ -250,13 +250,13 @@ def add_category_info(inventory_df, sku_master):
     return inventory_with_cat
 
 inventory_data = add_category_info(latest_inventory, sku_master)
-print(f"   ✅ Added category info for {len(inventory_data)} SKUs")
+print(f"    Added category info for {len(inventory_data)} SKUs")
 
 # ============================================
 # 4. CALCULATE FORECAST DEMAND
 # ============================================
 
-print("\n🔮 Calculating forecast demand...")
+print("\n Calculating forecast demand...")
 
 def calculate_forecast_demand(predictions):
     """Calculate forecast demand from predictions"""
@@ -286,13 +286,13 @@ def calculate_forecast_demand(predictions):
     return forecast
 
 forecast_demand = calculate_forecast_demand(future_predictions)
-print(f"   ✅ Forecast demand for {len(forecast_demand)} SKUs")
+print(f"    Forecast demand for {len(forecast_demand)} SKUs")
 
 # ============================================
 # 5. MERGE INVENTORY WITH FORECAST
 # ============================================
 
-print("\n🔄 Merging inventory with forecast...")
+print("\n Merging inventory with forecast...")
 
 def merge_inventory_forecast(inventory, forecast):
     """Merge inventory data with forecast demand"""
@@ -306,13 +306,13 @@ def merge_inventory_forecast(inventory, forecast):
     return merged
 
 risk_data = merge_inventory_forecast(inventory_data, forecast_demand)
-print(f"   ✅ Merged data for {len(risk_data)} SKUs")
+print(f"    Merged data for {len(risk_data)} SKUs")
 
 # ============================================
 # 6. CALCULATE STOCKOUT RISK
 # ============================================
 
-print("\n⚠️ Calculating stockout risk...")
+print("\n Calculating stockout risk...")
 
 def calculate_stockout_risk(row):
     """Calculate stockout risk score and level"""
@@ -376,13 +376,13 @@ def calculate_stockout_risk(row):
 # Apply stockout risk
 stockout_results = risk_data.apply(calculate_stockout_risk, axis=1, result_type='expand')
 risk_data = pd.concat([risk_data, stockout_results], axis=1)
-print("   ✅ Stockout risk calculated")
+print("    Stockout risk calculated")
 
 # ============================================
 # 7. CALCULATE OVERSTOCK RISK
 # ============================================
 
-print("\n📦 Calculating overstock risk...")
+print("\n Calculating overstock risk...")
 
 def calculate_overstock_risk(row):
     """Calculate overstock risk score and level"""
@@ -450,13 +450,13 @@ def calculate_overstock_risk(row):
 # Apply overstock risk
 overstock_results = risk_data.apply(calculate_overstock_risk, axis=1, result_type='expand')
 risk_data = pd.concat([risk_data, overstock_results], axis=1)
-print("   ✅ Overstock risk calculated")
+print("    Overstock risk calculated")
 
 # ============================================
 # 8. CALCULATE REORDER QUANTITY
 # ============================================
 
-print("\n📦 Calculating reorder quantities...")
+print("\n Calculating reorder quantities...")
 
 def calculate_reorder_quantity(row):
     """Calculate recommended reorder quantity"""
@@ -495,13 +495,13 @@ def calculate_reorder_quantity(row):
 # Apply reorder calculation
 reorder_results = risk_data.apply(calculate_reorder_quantity, axis=1, result_type='expand')
 risk_data = pd.concat([risk_data, reorder_results], axis=1)
-print("   ✅ Reorder quantities calculated")
+print("    Reorder quantities calculated")
 
 # ============================================
 # 9. CALCULATE BUSINESS IMPACT
 # ============================================
 
-print("\n💰 Calculating business impact...")
+print("\n Calculating business impact...")
 
 def calculate_business_impact(row):
     """Calculate rupee impact of stockout and overstock"""
@@ -543,13 +543,13 @@ def calculate_business_impact(row):
 # Apply business impact
 impact_results = risk_data.apply(calculate_business_impact, axis=1, result_type='expand')
 risk_data = pd.concat([risk_data, impact_results], axis=1)
-print("   ✅ Business impact calculated")
+print("    Business impact calculated")
 
 # ============================================
 # 10. CALCULATE SERVICE LEVEL METRICS
 # ============================================
 
-print("\n📊 Calculating service level metrics...")
+print("\n Calculating service level metrics...")
 
 def calculate_service_level(row):
     """Calculate service level and fill rate"""
@@ -575,13 +575,13 @@ def calculate_service_level(row):
 # Apply service level
 service_results = risk_data.apply(calculate_service_level, axis=1, result_type='expand')
 risk_data = pd.concat([risk_data, service_results], axis=1)
-print("   ✅ Service level metrics calculated")
+print("    Service level metrics calculated")
 
 # ============================================
 # 11. DETERMINE RECOMMENDATIONS
 # ============================================
 
-print("\n🎯 Determining recommendations...")
+print("\n Determining recommendations...")
 
 def determine_recommendation(row):
     """Determine final recommendation based on risks"""
@@ -610,7 +610,7 @@ def determine_recommendation(row):
         return 'Monitor'
 
 risk_data['recommendation'] = risk_data.apply(determine_recommendation, axis=1)
-print("   ✅ Recommendations determined")
+print("   Recommendations determined")
 
 # ============================================
 # 12. CATEGORIZE RISK QUADRANTS
@@ -643,25 +643,25 @@ print("=" * 60)
 
 # Stockout summary
 stockout_counts = risk_data['stockout_risk_level'].value_counts()
-print(f"\n📊 Stockout Risk:")
+print(f"\n Stockout Risk:")
 for level, count in stockout_counts.items():
     print(f"   {level}: {count} SKUs")
 
 # Overstock summary
 overstock_counts = risk_data['overstock_risk_level'].value_counts()
-print(f"\n📊 Overstock Risk:")
+print(f"\n Overstock Risk:")
 for level, count in overstock_counts.items():
     print(f"   {level}: {count} SKUs")
 
 # Recommendation summary
 recommendations = risk_data['recommendation'].value_counts()
-print(f"\n📊 Recommendations:")
+print(f"\n Recommendations:")
 for rec, count in recommendations.head(10).items():
     print(f"   {rec}: {count} SKUs")
 
 # Quadrant summary
 quadrants = risk_data['risk_quadrant'].value_counts()
-print(f"\n📊 Risk Quadrants:")
+print(f"\n Risk Quadrants:")
 for quad, count in quadrants.items():
     print(f"   {quad}: {count} SKUs")
 
@@ -670,7 +670,7 @@ total_revenue_at_risk = risk_data['revenue_at_risk'].sum()
 total_capital_locked = risk_data['capital_locked'].sum()
 total_markdown_loss = risk_data['estimated_markdown_loss'].sum()
 
-print(f"\n💰 Financial Impact Summary:")
+print(f"\n Financial Impact Summary:")
 print(f"   Revenue at Risk (Stockouts): ₹{total_revenue_at_risk:,.2f}")
 print(f"   Capital Locked (Overstock): ₹{total_capital_locked:,.2f}")
 print(f"   Estimated Markdown Loss: ₹{total_markdown_loss:,.2f}")
@@ -678,7 +678,7 @@ print(f"   Estimated Markdown Loss: ₹{total_markdown_loss:,.2f}")
 # Service Level
 avg_service_level = risk_data['service_level'].mean()
 avg_fill_rate = risk_data['fill_rate'].mean()
-print(f"\n📊 Service Level Summary:")
+print(f"\n Service Level Summary:")
 print(f"   Average Service Level: {avg_service_level:.1f}%")
 print(f"   Average Fill Rate: {avg_fill_rate:.1f}%")
 
@@ -686,11 +686,11 @@ print(f"   Average Fill Rate: {avg_fill_rate:.1f}%")
 # 14. SAVE OUTPUTS
 # ============================================
 
-print("\n💾 Saving risk reports...")
+print("\n Saving risk reports...")
 
 # Full risk report
 risk_data.to_csv(DATA_PROCESSED / 'risk_report_full.csv', index=False)
-print("✅ Full risk report saved")
+print(" Full risk report saved")
 
 # Urgent reorder list
 urgent_reorder = risk_data[
@@ -704,9 +704,9 @@ if len(urgent_reorder) > 0:
                     'revenue_at_risk', 'service_level', 'recommendation']
     reorder_cols = [col for col in reorder_cols if col in urgent_reorder.columns]
     urgent_reorder[reorder_cols].to_csv(DATA_PROCESSED / 'urgent_reorder_list.csv', index=False)
-    print(f"✅ Urgent reorder list ({len(urgent_reorder)} SKUs) saved")
+    print(f" Urgent reorder list ({len(urgent_reorder)} SKUs) saved")
 else:
-    print("✅ No urgent reorders needed")
+    print(" No urgent reorders needed")
 
 # Markdown list
 markdown_list = risk_data[
@@ -720,9 +720,9 @@ if len(markdown_list) > 0:
                      'estimated_markdown_loss', 'recommendation']
     markdown_cols = [col for col in markdown_cols if col in markdown_list.columns]
     markdown_list[markdown_cols].to_csv(DATA_PROCESSED / 'markdown_list.csv', index=False)
-    print(f"✅ Markdown list ({len(markdown_list)} SKUs) saved")
+    print(f" Markdown list ({len(markdown_list)} SKUs) saved")
 else:
-    print("✅ No markdowns needed")
+    print(" No markdowns needed")
 
 # Healthy SKUs
 healthy_skus = risk_data[
@@ -735,7 +735,7 @@ if len(healthy_skus) > 0:
                     'overstock_risk_score', 'service_level', 'fill_rate']
     healthy_cols = [col for col in healthy_cols if col in healthy_skus.columns]
     healthy_skus[healthy_cols].to_csv(DATA_PROCESSED / 'healthy_skus.csv', index=False)
-    print(f"✅ Healthy SKUs ({len(healthy_skus)} SKUs) saved")
+    print(f" Healthy SKUs ({len(healthy_skus)} SKUs) saved")
 
 # Dashboard summary
 dashboard_summary = pd.DataFrame({
@@ -746,7 +746,7 @@ dashboard_summary = pd.DataFrame({
               f"{avg_service_level:.1f}%"]
 })
 dashboard_summary.to_csv(DATA_PROCESSED / 'dashboard_summary.csv', index=False)
-print("✅ Dashboard summary saved")
+print(" Dashboard summary saved")
 
 # Risk summary
 risk_summary = pd.DataFrame({
@@ -762,13 +762,13 @@ risk_summary = pd.DataFrame({
               f"₹{total_markdown_loss:,.2f}", f"{avg_service_level:.1f}%", f"{avg_fill_rate:.1f}%"]
 })
 risk_summary.to_csv(DATA_PROCESSED / 'risk_summary.csv', index=False)
-print("✅ Risk summary saved")
+print(" Risk summary saved")
 
 # ============================================
 # 15. VISUALIZATIONS
 # ============================================
 
-print("\n📊 Creating visualizations...")
+print("\n Creating visualizations...")
 
 try:
     fig, axes = plt.subplots(2, 3, figsize=(18, 10))
@@ -853,10 +853,10 @@ try:
     plt.tight_layout()
     plt.savefig(REPORTS / 'risk_analysis.png', dpi=300, bbox_inches='tight')
     plt.close()
-    print("✅ Risk visualizations saved to reports/risk_analysis.png")
+    print(" Risk visualizations saved to reports/risk_analysis.png")
     
 except Exception as e:
-    print(f"   ⚠️ Visualization warning: {e}")
+    print(f"    Visualization warning: {e}")
 
 # ============================================
 # 16. FINAL SUMMARY
@@ -866,7 +866,7 @@ print("\n" + "=" * 60)
 print(" RISK SCORING COMPLETE!")
 print("=" * 60)
 
-print("\n📁 Files Generated:")
+print("\n Files Generated:")
 print(f"   {DATA_PROCESSED / 'risk_report_full.csv'}")
 print(f"   {DATA_PROCESSED / 'urgent_reorder_list.csv'}")
 print(f"   {DATA_PROCESSED / 'markdown_list.csv'}")
@@ -875,7 +875,7 @@ print(f"   {DATA_PROCESSED / 'dashboard_summary.csv'}")
 print(f"   {DATA_PROCESSED / 'risk_summary.csv'}")
 print(f"   {REPORTS / 'risk_analysis.png'}")
 
-print("\n📊 Quick Summary:")
+print("\n Quick Summary:")
 print(f"   Total SKUs: {len(risk_data)}")
 print(f"   Urgent Reorder Needed: {len(urgent_reorder)} SKUs")
 print(f"   Markdown Recommended: {len(markdown_list)} SKUs")
@@ -885,9 +885,9 @@ print(f"   Avg Service Level: {avg_service_level:.1f}%")
 print(f"   Avg Fill Rate: {avg_fill_rate:.1f}%")
 
 print("\n" + "=" * 60)
-print(" ✅ RISK SCORING COMPLETE!")
+print("  RISK SCORING COMPLETE!")
 print("=" * 60)
-print("\n📋 NEXT STEPS:")
+print("\n NEXT STEPS:")
 print("   1. Build Dashboard (Streamlit)")
 print("   2. Deploy Scoring API (FastAPI)")
 print("   3. Create Executive Readout")
